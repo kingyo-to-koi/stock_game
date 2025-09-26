@@ -4,8 +4,9 @@ import { resolve } from "path";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/stock_game/", // 꼭 넣어야 함!
+  base: "/stock_game/", // ← 레포명과 100% 일치!
   build: {
+    outDir: "docs", // ← Pages가 읽을 폴더
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
