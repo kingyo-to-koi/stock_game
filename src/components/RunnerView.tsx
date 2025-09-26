@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { db } from "../firebase";
-import {
-  doc,
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
-} from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 
 /** 뉴스 큐 타입: 러너는 현재 시각에 맞는 한 개만 노출 */
 type QueuedNews = {
@@ -23,6 +17,7 @@ type Stock = {
   description: string;
   basePrice: number;
   deltaPct: number;
+  sector?: string; // ✅ 업종
   isPublished?: boolean;
   scheduledDelta?: number | null;
   applyAt?: any | null;
@@ -77,9 +72,9 @@ export default function RunnerView() {
     const candidates = queue
       .filter((q) => q.publishAt)
       .map((q) => ({ ...q, d: toDateSafe(q.publishAt)! }))
-      .filter((q) => q.d && now >= q.d) // publishAt이 지났음
+      .filter((q) => q.d && now >= q.d)
       .sort((a, b) => +a.d - +b.d);
-    return candidates.at(-1) ?? null; // 가장 최신(가장 늦은) 것 1개
+    return candidates.at(-1) ?? null;
   }, [queue]);
 
   // 종목 표시용 가격/등락률 계산 (예약 반영 포함)
@@ -163,9 +158,20 @@ export default function RunnerView() {
                   className="grid grid-cols-[1fr_auto_auto] gap-2 items-center px-2 py-3 border-b last:border-b-0"
                 >
                   <div>
-                    <div className="font-bold">{s.name}</div>
+                    {/* ✅ 회사명에 커스텀 툴팁 (업종 표시) */}
+                    <div className="relative inline-block group">
+                      <div className="font-bold text-xs">{s.name}</div>
+                      {s.sector && s.sector.trim() !== "" && (
+                        <div className="pointer-events-none absolute z-10 hidden group-hover:block left-0 top-full mt-1 whitespace-nowrap rounded-md bg-black/80 text-white text-[11px] px-2 py-1 shadow">
+                          {s.sector}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 설명은 더 작게 */}
                     <div className="text-xs text-zinc-600">{s.description}</div>
                   </div>
+
                   <div
                     className={`text-right text-lg font-bold ${pctColor(
                       (s as any).effectiveDelta

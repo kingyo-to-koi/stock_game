@@ -14,7 +14,7 @@ import {
   query,
 } from "firebase/firestore";
 
-/** 종목 타입: 가격/예약 관련 필드 추가 */
+/** 종목 타입: 업종(sector) 추가, 가격/예약 필드 포함 */
 type Stock = {
   id: string;
   name: string;
@@ -25,6 +25,7 @@ type Stock = {
   isPublished?: boolean;
   scheduledDelta?: number | null; // 예약 등락률
   applyAt?: any | null; // 예약 적용 시각
+  sector?: string; // ✅ 업종
 };
 
 /** 뉴스 큐 타입: 5개 슬롯 관리용 */
@@ -161,6 +162,7 @@ export default function AdminView() {
     await setDoc(doc(db, "stocks", id), {
       name: "새 종목",
       description: "설명",
+      sector: "", // ✅ 업종 기본값
       basePrice: 1000, // 기본가
       deltaPct: 0,
       order: (stocks.at(-1)?.order ?? 0) + 1,
@@ -188,6 +190,7 @@ export default function AdminView() {
     await updateDoc(doc(db, "stocks", s.id), {
       name: s.name,
       description: s.description,
+      sector: s.sector ?? "", // ✅ 업종 저장
       basePrice: Number(s.basePrice),
       deltaPct: Number(s.deltaPct),
       order: s.order ?? null,
@@ -323,7 +326,7 @@ export default function AdminView() {
         </div>
 
         {/* ──────────────────────────────────────────
-            종목 관리 (가격 + 등락률 + 예약 등락)
+            종목 관리 (이름/업종/설명 + 가격/등락 + 예약)
            ────────────────────────────────────────── */}
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-semibold">종목 관리</h3>
@@ -344,8 +347,8 @@ export default function AdminView() {
 
             return (
               <div key={s.id} className="card-nb p-3">
-                {/* 1행: 기본 필드 */}
-                <div className="grid grid-cols-1 md:grid-cols-[160px_1fr_100px_80px] gap-2">
+                {/* 1행: 이름 / 업종 / 설명 / 등락% / 정렬 */}
+                <div className="grid grid-cols-1 md:grid-cols-[160px_160px_1fr_100px_80px] gap-2">
                   <input
                     className="input"
                     placeholder="종목명"
@@ -354,6 +357,18 @@ export default function AdminView() {
                       setStocks((p) =>
                         p.map((x) =>
                           x.id === s.id ? { ...x, name: e.target.value } : x
+                        )
+                      )
+                    }
+                  />
+                  <input
+                    className="input"
+                    placeholder="업종 (예: 신약개발, 제네릭)"
+                    value={s.sector ?? ""} // ✅ 업종 입력
+                    onChange={(e) =>
+                      setStocks((p) =>
+                        p.map((x) =>
+                          x.id === s.id ? { ...x, sector: e.target.value } : x
                         )
                       )
                     }
